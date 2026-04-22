@@ -95,7 +95,12 @@ static void cmd_show(const vector<string>& tokens){ if(currentPriv()<1){ cout<<"
  if(mode=="ISBN") ok = (b.isbn==value);
  else if(mode=="name") ok = (b.name==value);
  else if(mode=="author") ok = (b.author==value);
- else if(mode=="keyword") ok = (b.keyword==value);
+ else if(mode=="keyword") {
+ // match if value is contained in book's keyword segments
+ bool has=false; if(!b.keyword.empty()){ string seg; stringstream ssk(b.keyword); while(getline(ssk,seg,'|')){ if(seg==value){ has=true; break; } }
+ }
+ ok = has;
+ }
  }
  if(ok) outs.push_back(b);
  }

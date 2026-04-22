@@ -85,9 +85,9 @@ static void cmd_show(const vector<string>& tokens){ if(currentPriv()<1){ cout<<"
  mode = t.substr(1, eq-1); value = t.substr(eq+1);
  if(value.size()==0){ cout<<"Invalid\n"; return; }
  if(mode=="ISBN"){ if(!isLegalISBN(value)){ cout<<"Invalid\n"; return; } }
- else if(mode=="name"){ if(value.size()<2 || value.front()!='"' || value.back()!='"'){ cout<<"Invalid\n"; return; } value=value.substr(1,value.size()-2); if(!isLegalNameAuth(value)){ cout<<"Invalid\n"; return; } }
- else if(mode=="author"){ if(value.size()<2 || value.front()!='"' || value.back()!='"'){ cout<<"Invalid\n"; return; } value=value.substr(1,value.size()-2); if(!isLegalNameAuth(value)){ cout<<"Invalid\n"; return; } }
- else if(mode=="keyword"){ if(value.size()<2 || value.front()!='"' || value.back()!='"'){ cout<<"Invalid\n"; return; } value=value.substr(1,value.size()-2); if(!isLegalKeyword(value)){ cout<<"Invalid\n"; return; } if(keywordHasMultiple(value)){ cout<<"Invalid\n"; return; } }
+ else if(mode=="name"){ if(value.size()<2 || value.front()!='"' || value.back()!='"'){ cout<<"Invalid\n"; return; } value=value.substr(1,value.size()-2); if(value.empty()||!isLegalNameAuth(value)){ cout<<"Invalid\n"; return; } }
+ else if(mode=="author"){ if(value.size()<2 || value.front()!='"' || value.back()!='"'){ cout<<"Invalid\n"; return; } value=value.substr(1,value.size()-2); if(value.empty()||!isLegalNameAuth(value)){ cout<<"Invalid\n"; return; } }
+ else if(mode=="keyword"){ if(value.size()<2 || value.front()!='"' || value.back()!='"'){ cout<<"Invalid\n"; return; } value=value.substr(1,value.size()-2); if(value.empty()||!isLegalKeyword(value)){ cout<<"Invalid\n"; return; } if(keywordHasMultiple(value)){ cout<<"Invalid\n"; return; } }
  else { cout<<"Invalid\n"; return; }
  }
  vector<Book> outs; ifstream f(BOOK_FILE); string line; while(getline(f,line)){ if(line.empty()) continue; stringstream ss(line); string isb,name,auth,key,price,stock; getline(ss,isb,'\t'); getline(ss,name,'\t'); getline(ss,auth,'\t'); getline(ss,key,'\t'); getline(ss,price,'\t'); getline(ss,stock,'\t'); Book b; b.isbn=isb; b.name=name; b.author=auth; b.keyword=key; b.price=price.empty()?0:stod(price); b.stock=stock.empty()?0:stoi(stock);
@@ -122,9 +122,9 @@ static void cmd_modify(const vector<string>& tokens){ if(currentPriv()<3){ cout<
  // parse multiple -key=value pairs
  set<string> seen; Book b = findBook(selectedISBN()).value(); Book newb=b; for(size_t i=1;i<tokens.size();++i){ string t=tokens[i]; if(!starts_with(t,"-")){ cout<<"Invalid\n"; return; } size_t eq=t.find('='); if(eq==string::npos){ cout<<"Invalid\n"; return; } string key=t.substr(1,eq-1); string val=t.substr(eq+1); if(seen.count(key)) { cout<<"Invalid\n"; return; } seen.insert(key);
  if(key=="ISBN"){ if(!isLegalISBN(val)){ cout<<"Invalid\n"; return; } if(val==b.isbn){ cout<<"Invalid\n"; return; } if(bookExistsISBN(val)){ cout<<"Invalid\n"; return; } newb.isbn=val; }
- else if(key=="name"){ if(val.size()<2||val.front()!='"'||val.back()!='"'){ cout<<"Invalid\n"; return; } val=val.substr(1,val.size()-2); if(!isLegalNameAuth(val)){ cout<<"Invalid\n"; return; } newb.name=val; }
- else if(key=="author"){ if(val.size()<2||val.front()!='"'||val.back()!='"'){ cout<<"Invalid\n"; return; } val=val.substr(1,val.size()-2); if(!isLegalNameAuth(val)){ cout<<"Invalid\n"; return; } newb.author=val; }
- else if(key=="keyword"){ if(val.size()<2||val.front()!='"'||val.back()!='"'){ cout<<"Invalid\n"; return; } val=val.substr(1,val.size()-2); if(!isLegalKeyword(val)){ cout<<"Invalid\n"; return; } if(keywordHasDuplicateSegments(val)){ cout<<"Invalid\n"; return; } newb.keyword=val; }
+ else if(key=="name"){ if(val.size()<2||val.front()!='"'||val.back()!='"'){ cout<<"Invalid\n"; return; } val=val.substr(1,val.size()-2); if(val.empty()||!isLegalNameAuth(val)){ cout<<"Invalid\n"; return; } newb.name=val; }
+ else if(key=="author"){ if(val.size()<2||val.front()!='"'||val.back()!='"'){ cout<<"Invalid\n"; return; } val=val.substr(1,val.size()-2); if(val.empty()||!isLegalNameAuth(val)){ cout<<"Invalid\n"; return; } newb.author=val; }
+ else if(key=="keyword"){ if(val.size()<2||val.front()!='"'||val.back()!='"'){ cout<<"Invalid\n"; return; } val=val.substr(1,val.size()-2); if(val.empty()||!isLegalKeyword(val)){ cout<<"Invalid\n"; return; } if(keywordHasDuplicateSegments(val)){ cout<<"Invalid\n"; return; } newb.keyword=val; }
  else if(key=="price"){ if(!isLegalMoney(val)){ cout<<"Invalid\n"; return; } newb.price = stod(val); }
  else { cout<<"Invalid\n"; return; }
  }
@@ -227,6 +227,7 @@ int main(){ ios::sync_with_stdio(false); cin.tie(nullptr);
  if(tokens.size()!=2){ cout<<"Invalid\n"; }
  else if(tokens[1]=="finance") cmd_report_fin(); else if(tokens[1]=="employee") cmd_report_emp(); else cout<<"Invalid\n";
  }
+ else if(cmd=="show" && tokens.size()==1) cmd_show(tokens);
  else { cout<<"Invalid\n"; }
  }
  return 0; }
